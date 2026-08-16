@@ -1,26 +1,28 @@
-PIPE QR SCANNER V2
+PIPE QR SCANNER V2.1
 
-NEW IN V2
-- Manufacturer selector: SeAH / JFE / New-Other
-- SeAH automatic parsing retained
-- JFE automatic Piece No. parsing: final 5 QR characters
-- New/Other workflow: scan QR, then manually enter manufacturer and unique Pipe/Piece No.
-- Duplicate key changed to Manufacturer + Unique ID
-- Manufacturer added to saved scans and CSV export
-- V1 local scan data is migrated as SeAH records when V2 first loads
+NEW IN V2.1
+- Manual Entry button for illegible/unscannable QR codes
+- Manual entry uses the same Manufacturer + Unique ID duplicate check as QR scans
+- Optional Batch / Heat on manual entries
+- Optional Note field; defaults to "QR illegible"
+- Entry Method saved as "QR Scan" or "Manual Entry"
+- Entry Method and Note added to CSV export
+- V2 local data migrates automatically into V2.1
+- Existing SeAH, JFE, and New/Other QR workflows retained
+- Service worker updated to prefer the latest network version and remove old app caches
 
 KNOWN RULES
-SeAH example:
-5032674-001-001-SPA6092030-2606J0389
-Unique ID: 2606J0389
-Batch: SPA6092030
 
-JFE example:
-31255E11676001658051048910489
-Unique ID / Piece No.: 10489
+SeAH:
+Unique ID = final SeAH pipe section
+Batch = preceding section
 
-NEW / OTHER
-No QR structure is assumed. The user scans the QR and manually enters manufacturer and unique Pipe/Piece No.
+JFE:
+Unique ID / Piece No. = final 5 characters of QR
 
-IMPORTANT
-V2 still loads html5-qrcode from a CDN. A later revision should bundle it locally for dependable offline use.
+New / Other:
+Scan QR, then manually confirm manufacturer and unique Pipe/Piece No.
+
+Manual Entry:
+Use when QR is illegible or will not scan.
+Full QR is left blank.
