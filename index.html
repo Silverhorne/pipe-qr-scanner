@@ -8,367 +8,74 @@
 <title>Pipe QR Scanner</title>
 <style>
 :root{font-family:Arial,sans-serif;color-scheme:dark}*{box-sizing:border-box}
-body{margin:0;background:#0b0f14;color:#fff}.app{max-width:720px;margin:auto;padding:16px}
+body{margin:0;background:#0b0f14;color:#fff}.app{max-width:760px;margin:auto;padding:16px}
 h1{font-size:24px;margin:4px 0 14px}.card{background:#151b23;border:1px solid #2a3441;border-radius:14px;padding:14px;margin-bottom:12px}
 label{display:block;font-size:13px;color:#b9c3cf;margin:8px 0 5px}input,select,textarea{width:100%;font-size:18px;padding:12px;border-radius:10px;border:1px solid #465365;background:#0d1218;color:white}
-textarea{min-height:80px;resize:vertical}
-button{border:0;border-radius:10px;padding:12px 14px;font-weight:700;font-size:16px}.primary{background:#e5e7eb;color:#111827}.secondary{background:#273244;color:#fff}.danger{background:#7f1d1d;color:#fff}
+textarea{min-height:80px;resize:vertical}button{border:0;border-radius:10px;padding:12px 14px;font-weight:700;font-size:16px}.primary{background:#e5e7eb;color:#111827}.secondary{background:#273244;color:#fff}.danger{background:#7f1d1d;color:#fff}
 .row{display:flex;gap:8px;flex-wrap:wrap}.row button{flex:1;min-width:130px}#reader{width:100%;overflow:hidden;border-radius:12px;background:#000}
-.status{text-align:center;padding:12px;border-radius:10px;margin-top:10px;font-weight:700;min-height:44px}.ok{background:#12351f}.dup{background:#641b1b}.neutral{background:#222b36}
-.count{font-size:36px;font-weight:800;text-align:center}.muted{color:#9ba8b6;font-size:13px}.note{margin-top:8px;padding:9px;background:#202a36;border-radius:8px;font-size:13px;color:#c9d4df}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #303a46;padding:8px 5px;text-align:left;vertical-align:top}.delete{padding:6px 8px;font-size:12px}
-dialog{border:1px solid #465365;border-radius:14px;background:#151b23;color:white;width:min(92vw,520px);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}
-.qrraw{word-break:break-all;background:#0d1218;padding:10px;border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:10px}
+.status{text-align:center;padding:12px;border-radius:10px;margin-top:10px;font-weight:700;min-height:44px}.ok{background:#12351f}.dup{background:#641b1b}.neutral{background:#222b36}.warn{background:#5a4212}
+.counts{display:flex;justify-content:center;gap:22px;text-align:center}.count{font-size:32px;font-weight:800}.countLabel{font-size:12px;color:#9ba8b6}.muted{color:#9ba8b6;font-size:13px}.note{margin-top:8px;padding:9px;background:#202a36;border-radius:8px;font-size:13px;color:#c9d4df}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid #303a46;padding:8px 5px;text-align:left;vertical-align:top}.delete{padding:6px 8px;font-size:12px}.pending{color:#fbbf24;font-weight:700}.uploaded{color:#86efac;font-weight:700}.failed{color:#fca5a5;font-weight:700}
+dialog{border:1px solid #465365;border-radius:14px;background:#151b23;color:white;width:min(92vw,540px);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}.qrraw{word-break:break-all;background:#0d1218;padding:10px;border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:10px}
 </style>
 </head>
 <body>
 <div class="app">
-<h1>Pipe QR Scanner <span class="muted">V2.2</span></h1>
-
+<h1>Pipe QR Scanner <span class="muted">V2.3</span></h1>
 <div class="card">
-<label for="manufacturer">Manufacturer</label>
-<select id="manufacturer">
-<option value="SeAH">SeAH</option>
-<option value="JFE">JFE</option>
-<option value="Other">New / Other</option>
-</select>
-<div id="manufacturerNote" class="note"></div>
-
-<label for="scannerName">Scanned By</label>
-<input id="scannerName" placeholder="Name or initials">
-
-<label for="location">Stockpile / Location</label>
-<input id="location" placeholder="e.g. Stockpile 1">
+<label for="project">Project</label><input id="project" placeholder="e.g. 56-25-F0283">
+<label for="manufacturer">Manufacturer</label><select id="manufacturer"><option value="SeAH">SeAH</option><option value="JFE">JFE</option><option value="Other">New / Other</option></select><div id="manufacturerNote" class="note"></div>
+<label for="scannerName">Scanned By</label><input id="scannerName" placeholder="Name or initials">
+<label for="location">Stockpile / Location</label><input id="location" placeholder="e.g. Stockpile 1">
 </div>
-
 <div class="card">
-<div class="count"><span id="count">0</span></div>
-<div class="muted" style="text-align:center">pipes saved on this device</div>
-<div id="reader"></div>
-<div id="status" class="status neutral">Ready to scan</div>
-<div class="row" style="margin-top:10px">
-<button id="startBtn" class="primary">Start Scanner</button>
-<button id="manualBtn" class="primary">Manual Entry</button>
-<button id="stopBtn" class="secondary">Stop Scanner</button>
-<button id="undoBtn" class="secondary">Undo Last Scan</button>
+<div class="counts"><div><div class="count" id="count">0</div><div class="countLabel">LOCAL RECORDS</div></div><div><div class="count" id="pendingCount">0</div><div class="countLabel">PENDING</div></div><div><div class="count" id="uploadedCount">0</div><div class="countLabel">UPLOADED</div></div></div>
+<div id="reader"></div><div id="status" class="status neutral">Ready to scan</div>
+<div class="row" style="margin-top:10px"><button id="startBtn" class="primary">Start Scanner</button><button id="manualBtn" class="primary">Manual / Bulk Entry</button><button id="stopBtn" class="secondary">Stop Scanner</button><button id="undoBtn" class="secondary">Undo Last</button></div>
 </div>
-</div>
-
 <div class="card">
-<div class="row">
-<button id="exportBtn" class="primary">Export CSV</button>
-<button id="clearBtn" class="danger">Clear All Data</button>
+<div class="row"><button id="syncBtn" class="primary">Sync Now</button><button id="settingsBtn" class="secondary">Sync Settings</button><button id="exportBtn" class="secondary">Export CSV</button><button id="clearBtn" class="danger">Clear All Data</button></div>
+<p class="muted">QR scans use duplicate detection by Manufacturer + Piece Number. Bulk entries may use Quantity greater than 1.</p>
 </div>
-<p class="muted">Duplicate detection uses Manufacturer + Unique ID.</p>
+<div class="card"><strong>Saved Records</strong><div style="overflow:auto;max-height:460px;margin-top:8px"><table><thead><tr><th>#</th><th>Project</th><th>Manufacturer</th><th>Piece</th><th>Heat</th><th>Qty</th><th>Method</th><th>Status</th><th></th></tr></thead><tbody id="scanRows"></tbody></table></div></div>
 </div>
-
-<div class="card">
-<strong>Saved Scans</strong>
-<div style="overflow:auto;max-height:420px;margin-top:8px">
-<table>
-<thead><tr><th>#</th><th>Manufacturer</th><th>Unique ID</th><th>Batch / Heat</th><th>Method</th><th>Location</th><th>Time</th><th></th></tr></thead>
-<tbody id="scanRows"></tbody>
-</table>
-</div>
-</div>
-</div>
-
-<dialog id="otherDialog">
-<h2>New / Other Manufacturer</h2>
-<div class="muted">QR scanned. Enter the manufacturer and the unique pipe/piece number exactly as shown on the label.</div>
-<label>Raw QR</label>
-<div id="otherRaw" class="qrraw"></div>
-<label for="otherManufacturer">Manufacturer name</label>
-<input id="otherManufacturer" placeholder="e.g. Tenaris">
-<label for="otherUnique">Unique Pipe / Piece No.</label>
-<input id="otherUnique" placeholder="Unique number">
-<label for="otherSecondary">Batch / Heat (optional)</label>
-<input id="otherSecondary" placeholder="Optional">
-<div class="row" style="margin-top:14px">
-<button id="otherSave" class="primary">Save Scan</button>
-<button id="otherCancel" class="secondary">Cancel</button>
-</div>
-</dialog>
-
-<dialog id="manualDialog">
-<h2>Manual Entry</h2>
-<div class="muted">Use this when the QR code is damaged or will not scan.</div>
-<label for="manualManufacturer">Manufacturer</label>
-<select id="manualManufacturer">
-<option value="SeAH">SeAH</option>
-<option value="JFE">JFE</option>
-<option value="Other">New / Other</option>
-</select>
-<label for="manualOtherName" id="manualOtherNameLabel">Manufacturer name</label>
-<input id="manualOtherName" placeholder="Manufacturer name">
-<label for="manualUnique">Unique Pipe / Piece No.</label>
-<input id="manualUnique" placeholder="Required">
-<label for="manualSecondary">Batch / Heat (optional)</label>
-<input id="manualSecondary" placeholder="Optional">
-<label for="manualNote">Note (optional)</label>
-<textarea id="manualNote" placeholder="e.g. QR illegible"></textarea>
-<div class="row" style="margin-top:14px">
-<button id="manualSave" class="primary">Save Manual Entry</button>
-<button id="manualCancel" class="secondary">Cancel</button>
-</div>
-</dialog>
-
+<dialog id="settingsDialog"><h2>Sync Settings</h2><div class="muted">Paste the Power Automate HTTP URL. It is stored only on this device.</div><label for="webhookUrl">Power Automate HTTP URL</label><textarea id="webhookUrl" placeholder="https://..."></textarea><div class="row" style="margin-top:14px"><button id="settingsSave" class="primary">Save</button><button id="settingsCancel" class="secondary">Cancel</button></div></dialog>
+<dialog id="otherDialog"><h2>New / Other Manufacturer</h2><div class="muted">QR scanned. Enter the manufacturer and unique pipe/piece number.</div><label>Raw QR</label><div id="otherRaw" class="qrraw"></div><label for="otherManufacturer">Manufacturer name</label><input id="otherManufacturer"><label for="otherUnique">Unique Pipe / Piece No.</label><input id="otherUnique"><label for="otherSecondary">Batch / Heat</label><input id="otherSecondary"><div class="row" style="margin-top:14px"><button id="otherSave" class="primary">Save Scan</button><button id="otherCancel" class="secondary">Cancel</button></div></dialog>
+<dialog id="manualDialog"><h2>Manual / Bulk Entry</h2><div class="muted">For a single piece use Quantity 1. For bulk material, enter the heat/batch and the total quantity; Piece Number may be left blank.</div><label for="manualManufacturer">Manufacturer</label><select id="manualManufacturer"><option value="SeAH">SeAH</option><option value="JFE">JFE</option><option value="Other">New / Other</option></select><label for="manualOtherName" id="manualOtherNameLabel">Manufacturer name</label><input id="manualOtherName"><label for="manualUnique">Pipe / Piece No. (optional for bulk)</label><input id="manualUnique"><label for="manualSecondary">Batch / Heat</label><input id="manualSecondary"><label for="manualQuantity">Quantity</label><input id="manualQuantity" type="number" min="1" step="1" value="1"><label for="manualNote">Note (optional)</label><textarea id="manualNote"></textarea><div class="row" style="margin-top:14px"><button id="manualSave" class="primary">Save Entry</button><button id="manualCancel" class="secondary">Cancel</button></div></dialog>
 <script src="./html5-qrcode.min.js"></script>
 <script>
-const KEY="pipeQrScannerV21",OLD_KEY="pipeQrScannerV2";
+const KEY="pipeQrScannerV23",OLD_KEYS=["pipeQrScannerV21","pipeQrScannerV2"],WEBHOOK_KEY="pipeScannerWebhookUrl";
 let scans=JSON.parse(localStorage.getItem(KEY)||"[]"),scanner=null,lastAccepted={text:"",time:0},pendingRaw="";
-
-if(!localStorage.getItem(KEY)){
- const old=JSON.parse(localStorage.getItem(OLD_KEY)||"[]");
- if(old.length){
-  scans=old.map(s=>({
-   manufacturer:s.manufacturer||"SeAH",
-   uniqueId:s.uniqueId||"",
-   secondary:s.secondary||"",
-   qr:s.qr||"",
-   scannedBy:s.scannedBy||"",
-   location:s.location||"",
-   timestamp:s.timestamp||new Date().toISOString(),
-   entryMethod:s.entryMethod||"QR Scan",
-   note:s.note||""
-  }));
-  localStorage.setItem(KEY,JSON.stringify(scans));
- }
-}
-
 const $=id=>document.getElementById(id);
-$("scannerName").value=localStorage.getItem("pipeScannerName")||"";
-$("location").value=localStorage.getItem("pipeScannerLocation")||"";
-$("manufacturer").value=localStorage.getItem("pipeScannerManufacturer")||"SeAH";
-
-$("scannerName").addEventListener("input",e=>localStorage.setItem("pipeScannerName",e.target.value));
-$("location").addEventListener("input",e=>localStorage.setItem("pipeScannerLocation",e.target.value));
-$("manufacturer").addEventListener("change",e=>{localStorage.setItem("pipeScannerManufacturer",e.target.value);updateManufacturerNote()});
-
-function updateManufacturerNote(){
- const m=$("manufacturer").value;
- const notes={
-  SeAH:"Automatic: Pipe No. = final SeAH pipe section; Batch No. is also captured.",
-  JFE:"Automatic: Piece No. = last 5 characters of the JFE QR.",
-  Other:"Manual confirmation: scan the QR, then enter manufacturer and unique Pipe/Piece No."
- };
- $("manufacturerNote").textContent=notes[m];
+function newRecordId(){return "REC-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,7).toUpperCase()}
+if(!localStorage.getItem(KEY)){
+ for(const k of OLD_KEYS){const old=JSON.parse(localStorage.getItem(k)||"[]");if(old.length){scans=old.map(s=>({...s,project:s.project||"",quantity:Number(s.quantity)||1,uploadStatus:s.uploadStatus||"Pending",recordId:s.recordId||newRecordId()}));localStorage.setItem(KEY,JSON.stringify(scans));break}}
 }
-
+scans=scans.map(s=>({...s,quantity:Number(s.quantity)||1,uploadStatus:s.uploadStatus||"Pending",recordId:s.recordId||newRecordId(),project:s.project||""}));localStorage.setItem(KEY,JSON.stringify(scans));
+$("scannerName").value=localStorage.getItem("pipeScannerName")||"";$("location").value=localStorage.getItem("pipeScannerLocation")||"";$("manufacturer").value=localStorage.getItem("pipeScannerManufacturer")||"SeAH";$("project").value=localStorage.getItem("pipeScannerProject")||"";
+$("scannerName").addEventListener("input",e=>localStorage.setItem("pipeScannerName",e.target.value));$("location").addEventListener("input",e=>localStorage.setItem("pipeScannerLocation",e.target.value));$("project").addEventListener("input",e=>localStorage.setItem("pipeScannerProject",e.target.value));$("manufacturer").addEventListener("change",e=>{localStorage.setItem("pipeScannerManufacturer",e.target.value);updateManufacturerNote()});
+function updateManufacturerNote(){const notes={SeAH:"Automatic: Pipe No. = final SeAH pipe section; Batch / Heat is also captured.",JFE:"Automatic: Piece No. = last 5 characters of the JFE QR.",Other:"Manual confirmation after QR scan."};$("manufacturerNote").textContent=notes[$("manufacturer").value]}
 function save(){localStorage.setItem(KEY,JSON.stringify(scans));render()}
-
-function parseSeAH(text){
- const cleaned=text.trim().replace(/\s+/g,"");
- const main=cleaned.split("PO")[0].replace(/-+$/,""),parts=main.split("-");
- if(parts.length<2)return null;
- return{manufacturer:"SeAH",uniqueId:parts.at(-1),secondary:parts.at(-2),qr:cleaned,entryMethod:"QR Scan",note:""};
-}
-
-function parseJFE(text){
- const cleaned=text.trim().replace(/\s+/g,"");
- if(cleaned.length<5)return null;
- return{manufacturer:"JFE",uniqueId:cleaned.slice(-5),secondary:"",qr:cleaned,entryMethod:"QR Scan",note:""};
-}
-
-function feedback(type){if(navigator.vibrate)navigator.vibrate(type==="dup"?[250,100,250,100,250]:120)}
-function setStatus(msg,type="neutral"){$("status").textContent=msg;$("status").className="status "+type}
-
-function duplicateIndex(m,u){
- return scans.findIndex(x=>(x.manufacturer||"").toUpperCase()===m.toUpperCase()&&(x.uniqueId||"").toUpperCase()===u.toUpperCase())
-}
-
-function commitRecord(p){
- const existing=duplicateIndex(p.manufacturer,p.uniqueId);
- if(existing>=0){
-  feedback("dup");
-  return setStatus(`DUPLICATE: ${p.manufacturer} ${p.uniqueId} — already scan #${existing+1}`,"dup")
- }
- scans.push({
-  manufacturer:p.manufacturer,
-  uniqueId:p.uniqueId,
-  secondary:p.secondary||"",
-  qr:p.qr||"",
-  scannedBy:$("scannerName").value.trim(),
-  location:$("location").value.trim(),
-  timestamp:new Date().toISOString(),
-  entryMethod:p.entryMethod||"QR Scan",
-  note:p.note||""
- });
- feedback("ok");
- save();
- const method=(p.entryMethod||"QR Scan")==="Manual Entry"?"MANUAL":"SAVED";
- setStatus(`✓ ${p.manufacturer} ${p.uniqueId} ${method} — ${scans.length} TOTAL`,"ok");
-}
-
-function onScanSuccess(decodedText){
- const now=Date.now();
- if(decodedText===lastAccepted.text&&now-lastAccepted.time<2500)return;
- lastAccepted={text:decodedText,time:now};
- const m=$("manufacturer").value;
-
- if(m==="Other"){
-  pendingRaw=decodedText.trim().replace(/\s+/g,"");
-  $("otherRaw").textContent=pendingRaw;
-  $("otherManufacturer").value=localStorage.getItem("lastOtherManufacturer")||"";
-  $("otherUnique").value="";
-  $("otherSecondary").value="";
-  $("otherDialog").showModal();
-  return;
- }
-
- const p=m==="SeAH"?parseSeAH(decodedText):parseJFE(decodedText);
- if(!p||!p.uniqueId){
-  feedback("dup");
-  return setStatus(`QR read, but ${m} Unique ID could not be identified.`,"dup")
- }
- commitRecord(p);
-}
-
-$("otherSave").onclick=()=>{
- const manufacturer=$("otherManufacturer").value.trim();
- const uniqueId=$("otherUnique").value.trim();
- if(!manufacturer||!uniqueId)return alert("Enter both the manufacturer name and the unique Pipe/Piece No.");
- localStorage.setItem("lastOtherManufacturer",manufacturer);
- $("otherDialog").close();
- commitRecord({
-  manufacturer,
-  uniqueId,
-  secondary:$("otherSecondary").value.trim(),
-  qr:pendingRaw,
-  entryMethod:"QR Scan",
-  note:""
- });
- pendingRaw="";
-};
-
-$("otherCancel").onclick=()=>{pendingRaw="";$("otherDialog").close();setStatus("Scan cancelled.")};
-
-function toggleManualOther(){
- const isOther=$("manualManufacturer").value==="Other";
- $("manualOtherName").style.display=isOther?"block":"none";
- $("manualOtherNameLabel").style.display=isOther?"block":"none";
-}
-$("manualManufacturer").addEventListener("change",toggleManualOther);
-
-$("manualBtn").onclick=()=>{
- $("manualManufacturer").value=$("manufacturer").value;
- $("manualOtherName").value=localStorage.getItem("lastOtherManufacturer")||"";
- $("manualUnique").value="";
- $("manualSecondary").value="";
- $("manualNote").value="QR illegible";
- toggleManualOther();
- $("manualDialog").showModal();
- setTimeout(()=>$("manualUnique").focus(),100);
-};
-
-$("manualSave").onclick=()=>{
- let manufacturer=$("manualManufacturer").value;
- if(manufacturer==="Other"){
-  manufacturer=$("manualOtherName").value.trim();
-  if(!manufacturer)return alert("Enter the manufacturer name.");
-  localStorage.setItem("lastOtherManufacturer",manufacturer);
- }
- const uniqueId=$("manualUnique").value.trim();
- if(!uniqueId)return alert("Enter the unique Pipe/Piece No.");
- $("manualDialog").close();
- commitRecord({
-  manufacturer,
-  uniqueId,
-  secondary:$("manualSecondary").value.trim(),
-  qr:"",
-  entryMethod:"Manual Entry",
-  note:$("manualNote").value.trim()
- });
-};
-
-$("manualCancel").onclick=()=>{$("manualDialog").close();setStatus("Manual entry cancelled.")};
-
-async function startScanner(){
- if(scanner)return;
- setStatus("Starting camera…");
- scanner=new Html5Qrcode("reader");
- try{
-  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:220},aspectRatio:1.25},onScanSuccess,()=>{});
-  setStatus("Scanning… point camera at a pipe QR code.");
- }catch(e){
-  scanner=null;
-  setStatus("Camera could not start. Check camera permission and use HTTPS.","dup")
- }
-}
-
-async function stopScanner(){
- if(!scanner)return;
- try{await scanner.stop();scanner.clear()}catch(e){}
- scanner=null;
- setStatus("Scanner stopped.");
-}
-
+function parseSeAH(text){const cleaned=text.trim().replace(/\s+/g,"");const main=cleaned.split("PO")[0].replace(/-+$/,"");const parts=main.split("-");if(parts.length<2)return null;return{manufacturer:"SeAH",uniqueId:parts.at(-1),secondary:parts.at(-2),qr:cleaned,entryMethod:"QR Scan",note:""}}
+function parseJFE(text){const cleaned=text.trim().replace(/\s+/g,"");if(cleaned.length<5)return null;return{manufacturer:"JFE",uniqueId:cleaned.slice(-5),secondary:"",qr:cleaned,entryMethod:"QR Scan",note:""}}
+function feedback(type){if(navigator.vibrate)navigator.vibrate(type==="dup"?[250,100,250,100,250]:120)}function setStatus(msg,type="neutral"){$("status").textContent=msg;$("status").className="status "+type}
+function duplicateIndex(m,u){if(!u)return-1;return scans.findIndex(x=>(x.manufacturer||"").toUpperCase()===m.toUpperCase()&&(x.uniqueId||"").toUpperCase()===u.toUpperCase())}
+function commitRecord(p,{allowDuplicate=false}={}){if(!allowDuplicate){const existing=duplicateIndex(p.manufacturer,p.uniqueId);if(existing>=0){feedback("dup");return setStatus(`DUPLICATE: ${p.manufacturer} ${p.uniqueId} — already record #${existing+1}`,"dup")}}
+ const rec={manufacturer:p.manufacturer,uniqueId:p.uniqueId||"",secondary:p.secondary||"",quantity:Number(p.quantity)||1,qr:p.qr||"",scannedBy:$("scannerName").value.trim(),location:$("location").value.trim(),project:$("project").value.trim(),timestamp:new Date().toISOString(),entryMethod:p.entryMethod||"QR Scan",note:p.note||"",uploadStatus:"Pending",recordId:newRecordId()};scans.push(rec);feedback("ok");save();setStatus(`✓ ${rec.manufacturer} ${rec.uniqueId||rec.secondary} SAVED — Qty ${rec.quantity}`,"ok")}
+function onScanSuccess(decodedText){const now=Date.now();if(decodedText===lastAccepted.text&&now-lastAccepted.time<2500)return;lastAccepted={text:decodedText,time:now};const m=$("manufacturer").value;if(m==="Other"){pendingRaw=decodedText.trim().replace(/\s+/g,"");$("otherRaw").textContent=pendingRaw;$("otherManufacturer").value=localStorage.getItem("lastOtherManufacturer")||"";$("otherUnique").value="";$("otherSecondary").value="";$("otherDialog").showModal();return}const p=m==="SeAH"?parseSeAH(decodedText):parseJFE(decodedText);if(!p||!p.uniqueId){feedback("dup");return setStatus(`QR read, but ${m} Unique ID could not be identified.`,"dup")}commitRecord({...p,quantity:1})}
+$("otherSave").onclick=()=>{const manufacturer=$("otherManufacturer").value.trim(),uniqueId=$("otherUnique").value.trim();if(!manufacturer||!uniqueId)return alert("Enter both manufacturer and unique Pipe/Piece No.");localStorage.setItem("lastOtherManufacturer",manufacturer);$("otherDialog").close();commitRecord({manufacturer,uniqueId,secondary:$("otherSecondary").value.trim(),quantity:1,qr:pendingRaw,entryMethod:"QR Scan",note:""});pendingRaw=""};$("otherCancel").onclick=()=>{pendingRaw="";$("otherDialog").close();setStatus("Scan cancelled.")};
+function toggleManualOther(){const x=$("manualManufacturer").value==="Other";$("manualOtherName").style.display=x?"block":"none";$("manualOtherNameLabel").style.display=x?"block":"none"}$("manualManufacturer").addEventListener("change",toggleManualOther);
+$("manualBtn").onclick=()=>{$("manualManufacturer").value=$("manufacturer").value;$("manualOtherName").value=localStorage.getItem("lastOtherManufacturer")||"";$("manualUnique").value="";$("manualSecondary").value="";$("manualQuantity").value="1";$("manualNote").value="";toggleManualOther();$("manualDialog").showModal()};
+$("manualSave").onclick=()=>{let manufacturer=$("manualManufacturer").value;if(manufacturer==="Other"){manufacturer=$("manualOtherName").value.trim();if(!manufacturer)return alert("Enter manufacturer name.");localStorage.setItem("lastOtherManufacturer",manufacturer)}const uniqueId=$("manualUnique").value.trim(),secondary=$("manualSecondary").value.trim(),quantity=parseInt($("manualQuantity").value,10);if(!Number.isInteger(quantity)||quantity<1)return alert("Quantity must be 1 or greater.");if(!uniqueId&&!secondary)return alert("Enter a Piece Number or Batch / Heat.");if(quantity===1&&uniqueId&&duplicateIndex(manufacturer,uniqueId)>=0)return alert("That Manufacturer + Piece Number is already saved.");$("manualDialog").close();commitRecord({manufacturer,uniqueId,secondary,quantity,qr:"",entryMethod:quantity>1?"Bulk Entry":"Manual Entry",note:$("manualNote").value.trim()},{allowDuplicate:quantity>1||!uniqueId})};$("manualCancel").onclick=()=>$("manualDialog").close();
+async function startScanner(){if(scanner)return;setStatus("Starting camera…");scanner=new Html5Qrcode("reader");try{await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:220},aspectRatio:1.25},onScanSuccess,()=>{});setStatus("Scanning… point camera at a pipe QR code.")}catch(e){scanner=null;setStatus("Camera could not start. Check camera permission and use HTTPS.","dup")}}
+async function stopScanner(){if(!scanner)return;try{await scanner.stop();scanner.clear()}catch(e){}scanner=null;setStatus("Scanner stopped.")}
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-
-function render(){
- $("count").textContent=scans.length;
- $("scanRows").innerHTML=scans.map((s,i)=>{
-  const d=new Date(s.timestamp);
-  return `<tr>
-   <td>${i+1}</td>
-   <td>${esc(s.manufacturer)}</td>
-   <td>${esc(s.uniqueId)}</td>
-   <td>${esc(s.secondary)}</td>
-   <td>${esc(s.entryMethod||"QR Scan")}</td>
-   <td>${esc(s.location)}</td>
-   <td>${d.toLocaleString()}</td>
-   <td><button class="delete danger" onclick="removeScan(${i})">X</button></td>
-  </tr>`;
- }).join("");
-}
-
-window.removeScan=i=>{
- if(confirm(`Delete ${scans[i].manufacturer} ${scans[i].uniqueId}?`)){
-  scans.splice(i,1);
-  save();
- }
-};
-
-$("undoBtn").onclick=()=>{
- if(!scans.length)return;
- const s=scans.at(-1);
- if(confirm(`Remove last entry: ${s.manufacturer} ${s.uniqueId}?`)){
-  scans.pop();
-  save();
-  setStatus(`${s.uniqueId} removed.`);
- }
-};
-
-$("clearBtn").onclick=()=>{
- if(confirm(`Clear all ${scans.length} saved entries from this device? This cannot be undone.`)){
-  scans=[];
-  save();
-  setStatus("All scan data cleared.");
- }
-};
-
-$("exportBtn").onclick=()=>{
- if(!scans.length)return alert("There are no scans to export.");
- const headers=["Scan","Manufacturer","Unique ID","Batch / Heat","Entry Method","Full QR","Note","Scanned By","Stockpile / Location","Date/Time"];
- const q=v=>`"${String(v??"").replaceAll('"','""')}"`;
- const rows=scans.map((s,i)=>[
-  i+1,s.manufacturer,s.uniqueId,s.secondary,s.entryMethod||"QR Scan",s.qr,s.note||"",s.scannedBy,s.location,s.timestamp
- ].map(q).join(","));
- const csv=[headers.map(q).join(","),...rows].join("\r\n");
- const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
- const a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download=`Pipe_QR_Scans_${new Date().toISOString().slice(0,10)}.csv`;
- a.click();
- URL.revokeObjectURL(a.href);
-};
-
-$("startBtn").onclick=startScanner;
-$("stopBtn").onclick=stopScanner;
-updateManufacturerNote();
-render();
-
-if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
-</script>
-</body>
-</html>
+function render(){const pending=scans.filter(s=>s.uploadStatus!=="Uploaded").length,uploaded=scans.filter(s=>s.uploadStatus==="Uploaded").length;$("count").textContent=scans.length;$("pendingCount").textContent=pending;$("uploadedCount").textContent=uploaded;$("scanRows").innerHTML=scans.map((s,i)=>`<tr><td>${i+1}</td><td>${esc(s.project)}</td><td>${esc(s.manufacturer)}</td><td>${esc(s.uniqueId)}</td><td>${esc(s.secondary)}</td><td>${s.quantity}</td><td>${esc(s.entryMethod)}</td><td class="${s.uploadStatus==="Uploaded"?"uploaded":s.uploadStatus==="Failed"?"failed":"pending"}">${esc(s.uploadStatus)}</td><td><button class="delete danger" onclick="removeScan(${i})">X</button></td></tr>`).join("")}
+window.removeScan=i=>{if(confirm(`Delete record ${i+1}?`)){scans.splice(i,1);save()}};$("undoBtn").onclick=()=>{if(!scans.length)return;const s=scans.at(-1);if(confirm(`Remove last entry: ${s.uniqueId||s.secondary}?`)){scans.pop();save();setStatus("Last entry removed.")}};
+$("clearBtn").onclick=()=>{if(confirm(`Clear all ${scans.length} saved records from this device? This cannot be undone.`)){scans=[];save();setStatus("All local data cleared.")}};
+$("settingsBtn").onclick=()=>{$("webhookUrl").value=localStorage.getItem(WEBHOOK_KEY)||"";$("settingsDialog").showModal()};$("settingsSave").onclick=()=>{const u=$("webhookUrl").value.trim();if(!u.startsWith("https://"))return alert("Paste the complete HTTPS Power Automate URL.");localStorage.setItem(WEBHOOK_KEY,u);$("settingsDialog").close();setStatus("Sync URL saved on this device.","ok")};$("settingsCancel").onclick=()=>$("settingsDialog").close();
+function payload(s){return{Title:s.project||"",Manufacturer:s.manufacturer||"",PieceNumber:s.uniqueId||"",HeatNumber:s.secondary||"",Quantity:Number(s.quantity)||1,EntryType:s.entryMethod||"QR Scan",ScanDate:s.timestamp,EnteredBy:s.scannedBy||"",StockpileLocation:s.location||"",UploadStatus:"Uploaded",RecordID:s.recordId}}
+$("syncBtn").onclick=async()=>{const url=localStorage.getItem(WEBHOOK_KEY)||"";if(!url){$("settingsBtn").click();return}const idx=scans.map((s,i)=>s.uploadStatus!=="Uploaded"?i:-1).filter(i=>i>=0);if(!idx.length)return setStatus("Nothing pending — all records are uploaded.","ok");$("syncBtn").disabled=true;let ok=0,fail=0;setStatus(`Syncing ${idx.length} record(s)…`,"warn");for(const i of idx){try{const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload(scans[i]))});if(!r.ok)throw new Error(`HTTP ${r.status}`);scans[i].uploadStatus="Uploaded";scans[i].uploadedAt=new Date().toISOString();ok++}catch(e){scans[i].uploadStatus="Failed";scans[i].lastError=String(e);fail++}save()}$("syncBtn").disabled=false;setStatus(fail?`Sync complete: ${ok} uploaded, ${fail} failed. Failed records remain available to retry.`:`✓ ${ok} record(s) uploaded successfully.`,fail?"dup":"ok")};
+$("exportBtn").onclick=()=>{if(!scans.length)return alert("There are no records to export.");const headers=["Record ID","Project","Manufacturer","Piece Number","Heat Number","Quantity","Entry Type","QR","Note","Entered By","Stockpile Location","Scan Date","Upload Status"];const q=v=>`"${String(v??"").replaceAll('"','""')}"`;const rows=scans.map(s=>[s.recordId,s.project,s.manufacturer,s.uniqueId,s.secondary,s.quantity,s.entryMethod,s.qr,s.note,s.scannedBy,s.location,s.timestamp,s.uploadStatus].map(q).join(","));const blob=new Blob([[headers.map(q).join(","),...rows].join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`Material_Scans_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(a.href)};
+$("startBtn").onclick=startScanner;$("stopBtn").onclick=stopScanner;updateManufacturerNote();render();if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
+</script></body></html>
