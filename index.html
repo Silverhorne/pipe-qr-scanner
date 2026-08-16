@@ -23,7 +23,7 @@ dialog{border:1px solid #465365;border-radius:14px;background:#151b23;color:whit
 </head>
 <body>
 <div class="app">
-<h1>Pipe QR Scanner <span class="muted">V2.1</span></h1>
+<h1>Pipe QR Scanner <span class="muted">V2.2</span></h1>
 
 <div class="card">
 <label for="manufacturer">Manufacturer</label>
@@ -113,7 +113,7 @@ dialog{border:1px solid #465365;border-radius:14px;background:#151b23;color:whit
 </div>
 </dialog>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="./html5-qrcode.min.js"></script>
 <script>
 const KEY="pipeQrScannerV21",OLD_KEY="pipeQrScannerV2";
 let scans=JSON.parse(localStorage.getItem(KEY)||"[]"),scanner=null,lastAccepted={text:"",time:0},pendingRaw="";

@@ -1,17 +1,13 @@
-PIPE QR SCANNER V2.1
+PIPE QR SCANNER V2.2
 
-NEW IN V2.1
-- Manual Entry button for illegible/unscannable QR codes
-- Manual entry uses the same Manufacturer + Unique ID duplicate check as QR scans
-- Optional Batch / Heat on manual entries
-- Optional Note field; defaults to "QR illegible"
-- Entry Method saved as "QR Scan" or "Manual Entry"
-- Entry Method and Note added to CSV export
-- V2 local data migrates automatically into V2.1
-- Existing SeAH, JFE, and New/Other QR workflows retained
-- Service worker updated to prefer the latest network version and remove old app caches
+NEW IN V2.2
+- QR decoder library is bundled locally as html5-qrcode.min.js
+- Scanner no longer depends on the UNPKG/CDN connection
+- QR decoder is included in the service-worker offline cache
+- Existing V2.1 scan data and all SeAH/JFE/manual-entry functionality remain unchanged
 
 KNOWN RULES
+
 
 SeAH:
 Unique ID = final SeAH pipe section
