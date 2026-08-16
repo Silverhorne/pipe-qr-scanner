@@ -1,35 +1,26 @@
-PIPE QR SCANNER V1
+PIPE QR SCANNER V2
 
-Files:
-- index.html
-- manifest.webmanifest
-- sw.js
+NEW IN V2
+- Manufacturer selector: SeAH / JFE / New-Other
+- SeAH automatic parsing retained
+- JFE automatic Piece No. parsing: final 5 QR characters
+- New/Other workflow: scan QR, then manually enter manufacturer and unique Pipe/Piece No.
+- Duplicate key changed to Manufacturer + Unique ID
+- Manufacturer added to saved scans and CSV export
+- V1 local scan data is migrated as SeAH records when V2 first loads
 
-TESTING / HOSTING
-Camera access from a mobile browser requires HTTPS (or localhost).
-Upload these files to an HTTPS web host such as GitHub Pages.
-
-FIRST USE
-1. Open the hosted URL on the phone while online.
-2. Allow camera permission.
-3. Enter Scanned By and Stockpile / Location.
-4. Tap Start Scanner.
-5. Scan QR codes continuously.
-6. Export CSV when finished.
-
-DATA
-Scans are stored locally in the browser on that device.
-Pipe No. is treated as the unique identifier for duplicate detection.
-
-EXPECTED QR ENDING
-...-BATCHNO-PIPENO
-
-Example:
+KNOWN RULES
+SeAH example:
 5032674-001-001-SPA6092030-2606J0389
+Unique ID: 2606J0389
 Batch: SPA6092030
-Pipe: 2606J0389
+
+JFE example:
+31255E11676001658051048910489
+Unique ID / Piece No.: 10489
+
+NEW / OTHER
+No QR structure is assumed. The user scans the QR and manually enters manufacturer and unique Pipe/Piece No.
 
 IMPORTANT
-V1 loads the QR decoding library from a CDN. After the first successful online load,
-the app shell can be cached, but fully dependable offline operation should bundle the
-decoder locally in a later revision.
+V2 still loads html5-qrcode from a CDN. A later revision should bundle it locally for dependable offline use.

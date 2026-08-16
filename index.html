@@ -1,208 +1,193 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <title>Pipe QR Scanner</title>
-  <style>
-    :root { font-family: Arial, sans-serif; color-scheme: dark; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:#0b0f14; color:#fff; }
-    .app { max-width:720px; margin:auto; padding:16px; }
-    h1 { font-size:24px; margin:4px 0 14px; }
-    .card { background:#151b23; border:1px solid #2a3441; border-radius:14px; padding:14px; margin-bottom:12px; }
-    label { display:block; font-size:13px; color:#b9c3cf; margin:8px 0 5px; }
-    input { width:100%; font-size:18px; padding:12px; border-radius:10px; border:1px solid #465365; background:#0d1218; color:white; }
-    button { border:0; border-radius:10px; padding:12px 14px; font-weight:700; font-size:16px; cursor:pointer; }
-    .primary { background:#e5e7eb; color:#111827; }
-    .secondary { background:#273244; color:#fff; }
-    .danger { background:#7f1d1d; color:#fff; }
-    .row { display:flex; gap:8px; flex-wrap:wrap; }
-    .row button { flex:1; min-width:130px; }
-    #reader { width:100%; overflow:hidden; border-radius:12px; background:#000; }
-    .status { text-align:center; padding:12px; border-radius:10px; margin-top:10px; font-weight:700; min-height:44px; }
-    .ok { background:#12351f; }
-    .dup { background:#641b1b; }
-    .neutral { background:#222b36; }
-    .count { font-size:36px; font-weight:800; text-align:center; }
-    .muted { color:#9ba8b6; font-size:13px; }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th, td { border-bottom:1px solid #303a46; padding:8px 5px; text-align:left; vertical-align:top; }
-    td.qr { max-width:220px; word-break:break-all; }
-    .delete { padding:6px 8px; font-size:12px; }
-    .hidden { display:none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Pipe QR Scanner</title>
+<style>
+:root{font-family:Arial,sans-serif;color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;background:#0b0f14;color:#fff}.app{max-width:720px;margin:auto;padding:16px}
+h1{font-size:24px;margin:4px 0 14px}.card{background:#151b23;border:1px solid #2a3441;border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:#b9c3cf;margin:8px 0 5px}input,select{width:100%;font-size:18px;padding:12px;border-radius:10px;border:1px solid #465365;background:#0d1218;color:white}
+button{border:0;border-radius:10px;padding:12px 14px;font-weight:700;font-size:16px}.primary{background:#e5e7eb;color:#111827}.secondary{background:#273244;color:#fff}.danger{background:#7f1d1d;color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row button{flex:1;min-width:130px}#reader{width:100%;overflow:hidden;border-radius:12px;background:#000}
+.status{text-align:center;padding:12px;border-radius:10px;margin-top:10px;font-weight:700;min-height:44px}.ok{background:#12351f}.dup{background:#641b1b}.neutral{background:#222b36}
+.count{font-size:36px;font-weight:800;text-align:center}.muted{color:#9ba8b6;font-size:13px}.note{margin-top:8px;padding:9px;background:#202a36;border-radius:8px;font-size:13px;color:#c9d4df}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #303a46;padding:8px 5px;text-align:left;vertical-align:top}.delete{padding:6px 8px;font-size:12px}
+dialog{border:1px solid #465365;border-radius:14px;background:#151b23;color:white;width:min(92vw,520px);padding:18px}dialog::backdrop{background:rgba(0,0,0,.7)}
+.qrraw{word-break:break-all;background:#0d1218;padding:10px;border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:10px}
+</style>
 </head>
 <body>
 <div class="app">
-  <h1>Pipe QR Scanner <span class="muted">V1</span></h1>
+<h1>Pipe QR Scanner <span class="muted">V2</span></h1>
 
-  <div class="card">
-    <label for="scannerName">Scanned By</label>
-    <input id="scannerName" placeholder="Name or initials" autocomplete="name">
-    <label for="location">Stockpile / Location</label>
-    <input id="location" placeholder="e.g. Stockpile 1">
-  </div>
+<div class="card">
+<label for="manufacturer">Manufacturer</label>
+<select id="manufacturer">
+<option value="SeAH">SeAH</option>
+<option value="JFE">JFE</option>
+<option value="Other">New / Other</option>
+</select>
+<div id="manufacturerNote" class="note"></div>
 
-  <div class="card">
-    <div class="count"><span id="count">0</span></div>
-    <div class="muted" style="text-align:center">pipes saved on this device</div>
-    <div id="reader"></div>
-    <div id="status" class="status neutral">Ready to scan</div>
-    <div class="row" style="margin-top:10px">
-      <button id="startBtn" class="primary">Start Scanner</button>
-      <button id="stopBtn" class="secondary">Stop Scanner</button>
-      <button id="undoBtn" class="secondary">Undo Last Scan</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <button id="exportBtn" class="primary">Export CSV</button>
-      <button id="clearBtn" class="danger">Clear All Data</button>
-    </div>
-    <p class="muted">CSV opens directly in Excel. Pipe No. is used for duplicate detection.</p>
-  </div>
-
-  <div class="card">
-    <strong>Saved Scans</strong>
-    <div style="overflow:auto; max-height:380px; margin-top:8px">
-      <table>
-        <thead><tr><th>#</th><th>Pipe No.</th><th>Batch No.</th><th>Location</th><th>Time</th><th></th></tr></thead>
-        <tbody id="scanRows"></tbody>
-      </table>
-    </div>
-  </div>
+<label for="scannerName">Scanned By</label>
+<input id="scannerName" placeholder="Name or initials">
+<label for="location">Stockpile / Location</label>
+<input id="location" placeholder="e.g. Stockpile 1">
 </div>
+
+<div class="card">
+<div class="count"><span id="count">0</span></div>
+<div class="muted" style="text-align:center">pipes saved on this device</div>
+<div id="reader"></div>
+<div id="status" class="status neutral">Ready to scan</div>
+<div class="row" style="margin-top:10px">
+<button id="startBtn" class="primary">Start Scanner</button>
+<button id="stopBtn" class="secondary">Stop Scanner</button>
+<button id="undoBtn" class="secondary">Undo Last Scan</button>
+</div>
+</div>
+
+<div class="card">
+<div class="row">
+<button id="exportBtn" class="primary">Export CSV</button>
+<button id="clearBtn" class="danger">Clear All Data</button>
+</div>
+<p class="muted">Duplicate detection uses Manufacturer + Unique ID.</p>
+</div>
+
+<div class="card">
+<strong>Saved Scans</strong>
+<div style="overflow:auto;max-height:420px;margin-top:8px">
+<table>
+<thead><tr><th>#</th><th>Manufacturer</th><th>Unique ID</th><th>Batch / Heat</th><th>Location</th><th>Time</th><th></th></tr></thead>
+<tbody id="scanRows"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<dialog id="manualDialog">
+<h2>New / Other Manufacturer</h2>
+<div class="muted">QR scanned. Enter the manufacturer and the unique pipe/piece number exactly as shown on the label.</div>
+<label>Raw QR</label>
+<div id="manualRaw" class="qrraw"></div>
+<label for="manualManufacturer">Manufacturer name</label>
+<input id="manualManufacturer" placeholder="e.g. Tenaris">
+<label for="manualUnique">Unique Pipe / Piece No.</label>
+<input id="manualUnique" placeholder="Unique number">
+<div class="row" style="margin-top:14px">
+<button id="manualSave" class="primary">Save Scan</button>
+<button id="manualCancel" class="secondary">Cancel</button>
+</div>
+</dialog>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-const KEY = "pipeQrScannerV1";
-let scans = JSON.parse(localStorage.getItem(KEY) || "[]");
-let scanner = null;
-let lastAccepted = { text:"", time:0 };
+const KEY="pipeQrScannerV2",OLD_KEY="pipeQrScannerV1";
+let scans=JSON.parse(localStorage.getItem(KEY)||"[]"),scanner=null,lastAccepted={text:"",time:0},pendingRaw="";
+if(!localStorage.getItem(KEY)){
+ const old=JSON.parse(localStorage.getItem(OLD_KEY)||"[]");
+ if(old.length){
+  scans=old.map(s=>({manufacturer:"SeAH",uniqueId:s.pipe||"",secondary:s.batch||"",qr:s.qr||"",scannedBy:s.scannedBy||"",location:s.location||"",timestamp:s.timestamp||new Date().toISOString()}));
+  localStorage.setItem(KEY,JSON.stringify(scans));
+ }
+}
+const $=id=>document.getElementById(id);
+$("scannerName").value=localStorage.getItem("pipeScannerName")||"";
+$("location").value=localStorage.getItem("pipeScannerLocation")||"";
+$("manufacturer").value=localStorage.getItem("pipeScannerManufacturer")||"SeAH";
+$("scannerName").addEventListener("input",e=>localStorage.setItem("pipeScannerName",e.target.value));
+$("location").addEventListener("input",e=>localStorage.setItem("pipeScannerLocation",e.target.value));
+$("manufacturer").addEventListener("change",e=>{localStorage.setItem("pipeScannerManufacturer",e.target.value);updateManufacturerNote()});
 
-const $ = id => document.getElementById(id);
-$("scannerName").value = localStorage.getItem("pipeScannerName") || "";
-$("location").value = localStorage.getItem("pipeScannerLocation") || "";
-
-$("scannerName").addEventListener("input", e => localStorage.setItem("pipeScannerName", e.target.value));
-$("location").addEventListener("input", e => localStorage.setItem("pipeScannerLocation", e.target.value));
-
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(scans));
-  render();
+function updateManufacturerNote(){
+ const m=$("manufacturer").value;
+ const notes={
+  SeAH:"Automatic: Pipe No. = final SeAH pipe section; Batch No. is also captured.",
+  JFE:"Automatic: Piece No. = last 5 characters of the JFE QR.",
+  Other:"Manual: scan the QR, then enter manufacturer and unique Pipe/Piece No."
+ };
+ $("manufacturerNote").textContent=notes[m];
 }
-function parseQR(text) {
-  const cleaned = text.trim().replace(/\s+/g,"");
-  // Expected ending: ...-BATCH-PIPE, with optional PO(...) appended by some QR payloads.
-  const main = cleaned.split("PO")[0].replace(/-+$/,"");
-  const parts = main.split("-");
-  return {
-    full: cleaned,
-    pipe: parts.length ? parts[parts.length-1] : "",
-    batch: parts.length > 1 ? parts[parts.length-2] : ""
-  };
+function save(){localStorage.setItem(KEY,JSON.stringify(scans));render()}
+function parseSeAH(text){
+ const cleaned=text.trim().replace(/\s+/g,"");
+ const main=cleaned.split("PO")[0].replace(/-+$/,""),parts=main.split("-");
+ if(parts.length<2)return null;
+ return{manufacturer:"SeAH",uniqueId:parts.at(-1),secondary:parts.at(-2),qr:cleaned};
 }
-function feedback(type) {
-  if (navigator.vibrate) navigator.vibrate(type === "dup" ? [250,100,250,100,250] : 120);
+function parseJFE(text){
+ const cleaned=text.trim().replace(/\s+/g,"");
+ if(cleaned.length<5)return null;
+ return{manufacturer:"JFE",uniqueId:cleaned.slice(-5),secondary:"",qr:cleaned};
 }
-function setStatus(msg, type="neutral") {
-  $("status").textContent = msg;
-  $("status").className = "status " + type;
+function feedback(type){if(navigator.vibrate)navigator.vibrate(type==="dup"?[250,100,250,100,250]:120)}
+function setStatus(msg,type="neutral"){$("status").textContent=msg;$("status").className="status "+type}
+function duplicateIndex(m,u){return scans.findIndex(x=>(x.manufacturer||"").toUpperCase()===m.toUpperCase()&&(x.uniqueId||"").toUpperCase()===u.toUpperCase())}
+function commitParsed(p){
+ const existing=duplicateIndex(p.manufacturer,p.uniqueId);
+ if(existing>=0){feedback("dup");return setStatus(`DUPLICATE: ${p.manufacturer} ${p.uniqueId} — already scan #${existing+1}`,"dup")}
+ scans.push({manufacturer:p.manufacturer,uniqueId:p.uniqueId,secondary:p.secondary||"",qr:p.qr,scannedBy:$("scannerName").value.trim(),location:$("location").value.trim(),timestamp:new Date().toISOString()});
+ feedback("ok");save();setStatus(`✓ ${p.manufacturer} ${p.uniqueId} SAVED — ${scans.length} TOTAL`,"ok");
 }
-function onScanSuccess(decodedText) {
-  const now = Date.now();
-  if (decodedText === lastAccepted.text && now - lastAccepted.time < 2500) return;
-  lastAccepted = {text:decodedText, time:now};
-
-  const p = parseQR(decodedText);
-  if (!p.pipe) return setStatus("QR read, but Pipe No. could not be identified.", "dup");
-
-  const existing = scans.findIndex(x => x.pipe.toUpperCase() === p.pipe.toUpperCase());
-  if (existing >= 0) {
-    feedback("dup");
-    return setStatus(`DUPLICATE PIPE: ${p.pipe} — already scan #${existing+1}`, "dup");
-  }
-
-  scans.push({
-    pipe:p.pipe,
-    batch:p.batch,
-    qr:p.full,
-    scannedBy:$("scannerName").value.trim(),
-    location:$("location").value.trim(),
-    timestamp:new Date().toISOString()
-  });
-  feedback("ok");
-  save();
-  setStatus(`✓ ${p.pipe} SAVED — ${scans.length} TOTAL`, "ok");
+function onScanSuccess(decodedText){
+ const now=Date.now();
+ if(decodedText===lastAccepted.text&&now-lastAccepted.time<2500)return;
+ lastAccepted={text:decodedText,time:now};
+ const m=$("manufacturer").value;
+ if(m==="Other"){
+  pendingRaw=decodedText.trim().replace(/\s+/g,"");
+  $("manualRaw").textContent=pendingRaw;
+  $("manualManufacturer").value=localStorage.getItem("lastOtherManufacturer")||"";
+  $("manualUnique").value="";
+  $("manualDialog").showModal();return;
+ }
+ const p=m==="SeAH"?parseSeAH(decodedText):parseJFE(decodedText);
+ if(!p||!p.uniqueId){feedback("dup");return setStatus(`QR read, but ${m} Unique ID could not be identified.`,"dup")}
+ commitParsed(p);
 }
-async function startScanner() {
-  if (scanner) return;
-  setStatus("Starting camera…");
-  scanner = new Html5Qrcode("reader");
-  try {
-    await scanner.start(
-      { facingMode:"environment" },
-      { fps:10, qrbox:{width:260,height:260}, aspectRatio:1.0 },
-      onScanSuccess,
-      () => {}
-    );
-    setStatus("Scanning… point camera at a pipe QR code.");
-  } catch (e) {
-    scanner = null;
-    setStatus("Camera could not start. Check camera permission and use HTTPS.", "dup");
-  }
-}
-async function stopScanner() {
-  if (!scanner) return;
-  try { await scanner.stop(); scanner.clear(); } catch(e) {}
-  scanner = null;
-  setStatus("Scanner stopped.");
-}
-function render() {
-  $("count").textContent = scans.length;
-  $("scanRows").innerHTML = scans.map((s,i) => {
-    const d = new Date(s.timestamp);
-    return `<tr><td>${i+1}</td><td>${esc(s.pipe)}</td><td>${esc(s.batch)}</td><td>${esc(s.location)}</td><td>${d.toLocaleString()}</td><td><button class="delete danger" onclick="removeScan(${i})">X</button></td></tr>`;
-  }).join("");
-}
-function esc(s="") {
-  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-window.removeScan = i => {
-  if (confirm(`Delete pipe ${scans[i].pipe}?`)) { scans.splice(i,1); save(); }
+$("manualSave").onclick=()=>{
+ const manufacturer=$("manualManufacturer").value.trim(),uniqueId=$("manualUnique").value.trim();
+ if(!manufacturer||!uniqueId)return alert("Enter both the manufacturer name and the unique Pipe/Piece No.");
+ localStorage.setItem("lastOtherManufacturer",manufacturer);
+ $("manualDialog").close();
+ commitParsed({manufacturer,uniqueId,secondary:"",qr:pendingRaw});
+ pendingRaw="";
 };
-$("undoBtn").onclick = () => {
-  if (!scans.length) return;
-  const s=scans[scans.length-1];
-  if (confirm(`Remove last scan: ${s.pipe}?`)) { scans.pop(); save(); setStatus(`${s.pipe} removed.`); }
-};
-$("clearBtn").onclick = () => {
-  if (confirm(`Clear all ${scans.length} saved scans from this device? This cannot be undone.`)) {
-    scans=[]; save(); setStatus("All scan data cleared.");
-  }
-};
-$("exportBtn").onclick = () => {
-  if (!scans.length) return alert("There are no scans to export.");
-  const headers=["Scan","Pipe No.","Batch No.","Full QR","Scanned By","Stockpile / Location","Date/Time"];
-  const q=v => `"${String(v??"").replaceAll('"','""')}"`;
-  const rows=scans.map((s,i)=>[i+1,s.pipe,s.batch,s.qr,s.scannedBy,s.location,s.timestamp].map(q).join(","));
-  const csv=[headers.map(q).join(","),...rows].join("\r\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`Pipe_QR_Scans_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-};
-$("startBtn").onclick=startScanner;
-$("stopBtn").onclick=stopScanner;
-render();
+$("manualCancel").onclick=()=>{pendingRaw="";$("manualDialog").close();setStatus("Scan cancelled.")};
 
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
+async function startScanner(){
+ if(scanner)return;setStatus("Starting camera…");scanner=new Html5Qrcode("reader");
+ try{
+  await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:220},aspectRatio:1.25},onScanSuccess,()=>{});
+  setStatus("Scanning… point camera at a pipe QR code.");
+ }catch(e){scanner=null;setStatus("Camera could not start. Check camera permission and use HTTPS.","dup")}
+}
+async function stopScanner(){if(!scanner)return;try{await scanner.stop();scanner.clear()}catch(e){}scanner=null;setStatus("Scanner stopped.")}
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){
+ $("count").textContent=scans.length;
+ $("scanRows").innerHTML=scans.map((s,i)=>{
+  const d=new Date(s.timestamp);
+  return `<tr><td>${i+1}</td><td>${esc(s.manufacturer)}</td><td>${esc(s.uniqueId)}</td><td>${esc(s.secondary)}</td><td>${esc(s.location)}</td><td>${d.toLocaleString()}</td><td><button class="delete danger" onclick="removeScan(${i})">X</button></td></tr>`;
+ }).join("");
+}
+window.removeScan=i=>{if(confirm(`Delete ${scans[i].manufacturer} ${scans[i].uniqueId}?`)){scans.splice(i,1);save()}};
+$("undoBtn").onclick=()=>{if(!scans.length)return;const s=scans.at(-1);if(confirm(`Remove last scan: ${s.manufacturer} ${s.uniqueId}?`)){scans.pop();save();setStatus(`${s.uniqueId} removed.`)}};
+$("clearBtn").onclick=()=>{if(confirm(`Clear all ${scans.length} saved scans from this device? This cannot be undone.`)){scans=[];save();setStatus("All scan data cleared.")}};
+$("exportBtn").onclick=()=>{
+ if(!scans.length)return alert("There are no scans to export.");
+ const headers=["Scan","Manufacturer","Unique ID","Batch / Heat","Full QR","Scanned By","Stockpile / Location","Date/Time"],q=v=>`"${String(v??"").replaceAll('"','""')}"`;
+ const rows=scans.map((s,i)=>[i+1,s.manufacturer,s.uniqueId,s.secondary,s.qr,s.scannedBy,s.location,s.timestamp].map(q).join(","));
+ const blob=new Blob([[headers.map(q).join(","),...rows].join("\r\n")],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`Pipe_QR_Scans_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(a.href);
+};
+$("startBtn").onclick=startScanner;$("stopBtn").onclick=stopScanner;updateManufacturerNote();render();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");
 </script>
 </body>
 </html>
