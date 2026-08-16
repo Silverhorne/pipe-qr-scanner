@@ -1,4 +1,4 @@
-const CACHE="pipe-qr-scanner-v231-20260816";
+const CACHE="pipe-qr-scanner-v232-20260816";
 const ASSETS=[
   "./",
   "./index.html",

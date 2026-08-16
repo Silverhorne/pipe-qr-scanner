@@ -1,15 +1,11 @@
-Pipe QR Scanner V2.3.1
+Pipe QR Scanner V2.3.2
 ========================
-Installability update only.
 
-Changes from V2.3:
-- Adds 192x192 and 512x512 PWA icons using the supplied SITE QR artwork.
-- Adds a maskable 512x512 icon for Android/Samsung launchers.
-- Adds Apple touch icon support.
-- Expands the web app manifest with id, scope, description, and icons.
-- Bumps the service-worker cache so deployed phones receive these assets.
-
-Scanner parsing, local records, manual/bulk entry, Sync Now, webhook storage,
-and SharePoint sync behavior are unchanged from V2.3.
+Changes from V2.3.1:
+- Adds a 3-second scanner lockout immediately after any successful QR capture.
+- Removes local duplicate blocking so repeated Piece Numbers are still saved and uploaded.
+- Duplicate investigation is handled in SharePoint/Power Automate using the Duplicate column.
+- Blank Piece Numbers remain valid for bulk/heat-only material and are not treated as duplicates by the configured flow.
+- Bumps the service-worker cache so deployed devices receive the update.
 
 Upload all files in this folder to the GitHub Pages repository root.
